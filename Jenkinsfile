@@ -1,46 +1,43 @@
 pipeline {
-  agent any
+    agent any
 
-  tools {
-    maven 'Maven3'     // si usás Maven; si usás otro, lo cambiás
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/monserratvela-hash/sonar'
-      }
+    tools {
+        maven 'Maven3'
     }
 
-    stage('Build') {
-      steps {
-        sh 'mvn clean package -DskipTests'   // compilar con Maven
-      }
-    }
+    stages {
 
-    stage('SonarQube Analysis') {
-      environment {
-        SONAR_TOKEN = credentials('sonar-token')  // el ID que diste en Jenkins
-      }
-      steps {
-        withSonarQubeEnv('SonarServer') {
-          sh '''
-            mvn sonar:sonar \
-              -Dsonar.projectKey=mi-proyecto \
-              -Dsonar.host.url=http://localhost:9000 \
-              -Dsonar.login=$SONAR_TOKEN
-          '''
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/monserratvela-hash/sonar'
+            }
         }
-      }
-    }
 
-    stage('Quality Gate') {
-      steps {
-        timeout(time: 5, unit: 'MINUTES') {
-          waitForQualityGate abortPipeline: true
+        stage('Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
         }
-      }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarServer') {
+                    sh """
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=sonar-project \
+                      -Dsonar.host.url=http://localhost:9000 \
+                      -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 3, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
     }
-  }
 }
-
