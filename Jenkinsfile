@@ -8,7 +8,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git 'https://github.com/tu-repo/tu-proyecto.git'
+        git 'https://github.com/monserratvela-hash/sonar'
       }
     }
 
@@ -43,3 +43,4 @@ pipeline {
     }
   }
 }
+
